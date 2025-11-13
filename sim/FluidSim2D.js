@@ -231,96 +231,57 @@ public class FluidSim2D : MonoBehaviour
 		ComputeHelper.Release(positionBuffer, predictedPositionBuffer, velocityBuffer, densityBuffer, sortTarget_Position, sortTarget_Velocity, sortTarget_PredicitedPosition);
 		spatialHash.Release();
 	}
-
-
-	void OnDrawGizmos()
-	{
-		Gizmos.color = new Color(0, 1, 0, 0.4f);
-		Gizmos.DrawWireCube(Vector2.zero, boundsSize);
-		Gizmos.DrawWireCube(obstacleCentre, obstacleSize);
-
-		if (Application.isPlaying)
-		{
-			Vector2 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-			bool isPullInteraction = Input.GetMouseButton(0);
-			bool isPushInteraction = Input.GetMouseButton(1);
-			bool isInteracting = isPullInteraction || isPushInteraction;
-			if (isInteracting)
-			{
-				Gizmos.color = isPullInteraction ? Color.green : Color.red;
-				Gizmos.DrawWireSphere(mousePos, interactionRadius);
-			}
-		}
-	}
 }
 */
 import { ComputeBuffer } from "../util/Compute";
+import { Vector2 } from "../util/Vector";
+import { Spawner2D } from "./Spawner2D";
 
 class FluidSim2D {
 	constructor() {
 		this.timeScale = 1;
-		
-		/*
-		public event System.Action SimulationStepCompleted;
-
-		[Header("Simulation Settings")]
-		public float timeScale = 1;
-		public float maxTimestepFPS = 60; // if time-step dips lower than this fps, simulation will run slower (set to 0 to disable)
-		public int iterationsPerFrame;
-		public float gravity;
-		[Range(0, 1)] public float collisionDamping = 0.95f;
-		public float smoothingRadius = 2;
-		public float targetDensity;
-		public float pressureMultiplier;
-		public float nearPressureMultiplier;
-		public float viscosityStrength;
-		public Vector2 boundsSize;
-		public Vector2 obstacleSize;
-		public Vector2 obstacleCentre;
-
-		[Header("Interaction Settings")]
-		public float interactionRadius;
-
-		public float interactionStrength;
-
-		[Header("References")]
-		public ComputeShader compute;
-
-		public Spawner2D spawner2D;
-
-		// Buffers
-		public ComputeBuffer positionBuffer { get; private set; }
-		public ComputeBuffer velocityBuffer { get; private set; }
-		public ComputeBuffer densityBuffer { get; private set; }
-
-		ComputeBuffer sortTarget_Position;
-		ComputeBuffer sortTarget_PredicitedPosition;
-		ComputeBuffer sortTarget_Velocity;
-
-		ComputeBuffer predictedPositionBuffer;
-		SpatialHash spatialHash;
-
-		// Kernel IDs
-		const int externalForcesKernel = 0;
-		const int spatialHashKernel = 1;
-		const int reorderKernel = 2;
-		const int copybackKernel = 3;
-		const int densityKernel = 4;
-		const int pressureKernel = 5;
-		const int viscosityKernel = 6;
-		const int updatePositionKernel = 7;
-
-		// State
-		bool isPaused;
-		Spawner2D.ParticleSpawnData spawnData;
-		bool pauseNextFrame;
-
-		public int numParticles { get; private set; }
-		*/
+		this.maxTimestepFPS = 60;
+		this.iterationsPerFrame = 3;
+		this.gravity = -12;
+		this.collisionDamping = 0.95;
+		this.smoothingRadius = 2;
+		this.targetDensity = 55;
+		this.pressureMultiplier = 500;
+		this.nearPressureMultiplier = 5;
+		this.viscosityStrength = 0.03;
+		this.boundsSize;
+		this.obstacleSize;
+		this.obstacleCentre;
+		this.interactionRadius = 2;
+		this.interactionStrength = 90;
+		this.compute;
+		/** @type {Spawner2D} */
+		this.spawner2D = Spawner2D();
+		this.positionBuffer;
+		this.velocityBuffer;
+		this.densityBuffer;
+		this.sortTarget_Position;
+		this.sortTarget_PredicitedPosition;
+		this.sortTarget_Velocity;
+		this.predictedPositionBuffer;
+		this.spatialHash;
+		this.externalForcesKernel = 0;
+		this.spatialHashKernel = 1;
+		this.reorderKernel = 2;
+		this.copybackKernel = 3;
+		this.densityKernel = 4;
+		this.pressureKernel = 5;
+		this.viscosityKernel = 6;
+		this.updatePositionKernel = 7;
+		this.isPaused = false;
+		this.spawnData;
+		this.pauseNextFrame;
+		this.numParticles;
 	}
 
 	Init() {
 		const deltaTime = 1 / 60;
+		this.spawnData = this.spawner2D.GetSpawnData();
 		/*
 		float deltaTime = 1 / 60f;
 		Time.fixedDeltaTime = deltaTime;
