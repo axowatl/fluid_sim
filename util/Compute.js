@@ -169,6 +169,23 @@ export class ComputeBuffer {
 			buffer: { type: _t }
 		}
 	}
+
+	/**
+	 * 
+	 * @param {number} count number of elements in the buffer
+	 * @param {number} stride size (in bytes) of each element
+	 * @param {number} usage buffer usage flags
+	 * @returns {ComputeBuffer}
+	 */
+	static CreateStructuredBuffer(count, stride, usage = GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST) {
+		const size = count * stride;
+		const buffer = device.createBuffer({
+			size: size,
+			usage: usage,
+			mappedAtCreation: false
+		});
+		return buffer;
+	}
 }
 
 /*
